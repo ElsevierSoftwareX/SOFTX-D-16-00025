@@ -1,0 +1,86 @@
+---GPU accelerated Stochastic Optimization Method 
+Johan Nordström, Uppsala University
+2016
+
+---GPU SOM:
+This software computes an approximated spectral function to a first order Fredholm
+integral equation given a Greens function and a kernel. 
+It is based on the algorithm by Mischenko et. al in PRB 62 6317 (2000) appendix B3.
+
+---CONSTRAINTS:
+The input Green's function must be normalized such that the
+definite integral of the output spectral function on the defined domain is equal to one.
+The output spectral function is assumed to be non-negative.
+
+---REQUIREMENTS:
+CUDA compatible NVIDIA card
+CUDA Toolkit 7 (need thrust library)
+Linux
+
+---COMPILE INSTRUCTIONS:
+Use the Makefile located in the program folder for easy compilation. Run with ./mish.out
+
+(The software can be used as a library by including "mish.cuh"
+The library consists of a single function, which takes three input parameters.
+An input struct, and two float arrays for the output data. Details about the input struct is written
+in mish.cuh
+Use the nvcc compiler with flags -rdc=true, -lcurand, -use_fast_math, -O3.
+Compile mish.cu, config.cu, constants.cu separately to object files and then link to your
+own code. (See the Makefile for details))
+
+---RECOMMENDED USAGE:
+The source folder includes an example program which uses the library by reading
+two input files (control.in and infloa.in) and produces an output file (out.dat).
+Only modifying these input files is the recommended way of using this software and 
+the format of these input files are described below.
+
+-INPUT FILES:
+The two input files, control.in and infloa.in must be
+located in the same directory as the executable file.
+
+-control.in - Contains input parameters, both algorithm and problem specific.
+The input parameters are read row by row with the following format:
+# Number of global updates
+# Number of local updates per global update
+# Number of elementary updates per local update
+# Kernel represented by an integer
+# Minimum omega
+# Maximum omega
+# Beta (Inverse temperature)
+# Starting rectangles per global update
+# Number of output spectral points
+	
+There are three defined kernels represented with the integers:
+0: K(i*x, omega) = 1/(i*x - omega).
+1: K(x, omega) = exp(-x*omega)/(1 + exp(-Beta*omega)).
+2: K(x, omega) = omega*omega/(x*x + omega*omega);
+
+-infloa.in - Contains the input Green's function. Each row corresponds to
+a point of the Green's function and the columns are space separated.
+The format is:
+x Re[G(x)] Im[G(x)].
+For real valued Green's functions, the imaginary part is simply left out.
+
+It is recommended to use the python script toinput.py which generates
+an input file, infloa.in, with the correct format and precision. 
+The python script assumes that you have either
+space, comma or tab separated raw data. 
+First command argument is the name of the file, and the
+second the number of wanted input points.
+Example command: python toinput.py input.txt 64
+
+The source folder includes example files for the input files.
+
+-TYPICAL INPUT SETTINGS:
+For an average problem, the following settings often yields
+an acceptable solution:
+64-128 input Green's function points
+64-512 global updates (Increasing num. global updates decreases noise but increases the memory usage and the total computation linearly)
+80-500 local updates (Increasing num. local. updates decreases the deviation/error)
+80-500 elementary updates (Increasing num. elementary decreases the deviation/error (in general) while allowing to escape local minima)
+200 starting rectangles
+
+-OUTPUT DATA: 
+The output spectral function p, is written to "output.dat" and 
+is space separated with the format: omega p(omega)
+and can easily be plotted with e.g. gnuplot.

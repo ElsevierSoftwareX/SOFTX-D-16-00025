@@ -1,0 +1,9 @@
+64 	   	# Global updates
+80   	# Local updates per global
+80		# Elementary updates per local
+0		# Kernel
+-3 		# Minimum omega
+3    	# Maximum omega
+10	    # Beta (will not be used in boson case)
+200		# Starting rectangles per global update ( << elementary )
+100		# Number of output spectral points
